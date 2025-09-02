@@ -1,34 +1,26 @@
-# Step 1: Build Next.js app
-FROM node:18-alpine AS build
+# Use Node.js base image
+FROM node:18-alpine
+
+# Upgrade npm
+RUN npm install -g npm@latest
+
+# Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package.json package-lock.json* ./
+# Copy dependency files
+COPY package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy the rest of the code
+# Copy all project files
 COPY . .
 
-# Build the Next.js app
+# Build the project
 RUN npm run build
 
-# Step 2: Run Next.js in production mode
-FROM node:18-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-
-# Copy necessary files from build stage
-COPY --from=build /app/package.json ./
-COPY --from=build /app/package-lock.json ./
-COPY --from=build /app/.next ./.next
-COPY --from=build /app/public ./public
-COPY --from=build /app/node_modules ./node_modules
-
-# Expose Next.js port
-EXPOSE 3000
-
-# Start the Next.js server
+# Expose React/Next.js dev port
+EXPOSE 80
+# Start app
 CMD ["npm", "start"]
 
