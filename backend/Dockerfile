@@ -20,7 +20,8 @@ COPY . .
 RUN npm run build
 
 # Expose React/Next.js dev port
-EXPOSE 80
+EXPOSE 3000
 # Start app
 CMD ["npm", "start"]
+
 
