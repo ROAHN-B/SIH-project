@@ -1,11 +1,34 @@
-# Use lightweight NGINX base image
-FROM nginx:alpine
+# Step 1: Build Next.js app
+FROM node:18-alpine AS build
+WORKDIR /app
 
-# Remove default nginx static assets
-RUN rm -rf /usr/share/nginx/html/*
+# Copy package files
+COPY package.json package-lock.json* ./
 
-# Copy all portfolio files into NGINX web root
-COPY . /usr/share/nginx/html/
+# Install dependencies
+RUN npm install
 
-# Expose port 80
-EXPOSE 80
+# Copy the rest of the code
+COPY . .
+
+# Build the Next.js app
+RUN npm run build
+
+# Step 2: Run Next.js in production mode
+FROM node:18-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+
+# Copy necessary files from build stage
+COPY --from=build /app/package.json ./
+COPY --from=build /app/package-lock.json ./
+COPY --from=build /app/.next ./.next
+COPY --from=build /app/public ./public
+COPY --from=build /app/node_modules ./node_modules
+
+# Expose Next.js port
+EXPOSE 3000
+
+# Start the Next.js server
+CMD ["npm", "start"]
+
