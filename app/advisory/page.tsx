@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -25,6 +26,7 @@ import { useLanguage } from "@/contexts/language-context"
 import { useTranslation } from "@/lib/translations"
 
 export default function AdvisoryPage() {
+  const router = useRouter()
   const [isListening, setIsListening] = useState(false)
   const [formData, setFormData] = useState({
     location: "",
@@ -65,7 +67,6 @@ export default function AdvisoryPage() {
 
   const toggleVoiceInput = () => {
     setIsListening(!isListening)
-    // Simulate voice input
     if (!isListening) {
       setTimeout(() => {
         setFormData((prev) => ({
@@ -84,7 +85,6 @@ export default function AdvisoryPage() {
   }
 
   const generateRecommendations = () => {
-    // Simulate AI-generated recommendations
     const mockRecommendations = [
       {
         crop: "Tomato",
@@ -132,6 +132,10 @@ export default function AdvisoryPage() {
 
     setRecommendations(mockRecommendations)
     setShowRecommendations(true)
+
+    if (formData.location.trim()) {
+      router.push(`/weather-market?city=${encodeURIComponent(formData.location.trim())}`)
+    }
   }
 
   const getSuitabilityColor = (suitability: string) => {
@@ -340,34 +344,7 @@ export default function AdvisoryPage() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Thermometer className="h-5 w-5 text-primary" />
-                    {t.currentConditions}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Thermometer className="h-4 w-4 text-orange-500" />
-                      <span>28°C</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Droplets className="h-4 w-4 text-blue-500" />
-                      <span>65% {t.humidity}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-green-500" />
-                      <span>{t.rabi}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span>{t.goodForPlanting}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              
             </div>
           </div>
         ) : (
