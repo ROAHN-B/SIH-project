@@ -47,8 +47,6 @@
   --ring: 160 84% 39%;
 }
 
-/* Removed problematic @apply border-border rule that was causing the error */
-
 /* Custom animations and creative effects */
 @keyframes float {
   0%,
@@ -82,31 +80,11 @@
   }
 }
 
-@keyframes bounce-in {
-  0% {
-    transform: scale(0.3) rotate(-10deg);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.05) rotate(5deg);
-  }
-  70% {
-    transform: scale(0.9) rotate(-2deg);
-  }
-  100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 1;
-  }
-}
-
 .float-animation {
   animation: float 3s ease-in-out infinite;
 }
 .pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
-}
-.bounce-in {
-  animation: bounce-in 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .gradient-bg {
