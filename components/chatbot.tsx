@@ -33,7 +33,7 @@ const DYNAMIC_PROMPT =
   "    - For comparing items (e.g., fertilizers, crops), use a simple table.\n" +
   "    - For general information, use paragraphs with bolded keywords and headings.\n" +
   "4.  **Do NOT use a fixed template for every response.** The structure should be dynamic and appropriate to the question.\n" +
-  "5.  **Suggest Next Steps:** After your main response, add a section titled '🤔 Suggested Questions:' followed by a numbered list of 2-3 relevant follow-up questions the user might ask. This is mandatory.\n" +
+  "5.  **Suggest Next Steps:** After your main response, add a section titled '🤔 :' followed by a numbered list of 2-3 relevant follow-up questions the user might ask. This is mandatory.\n" +
   `6.  Reply in the user's language.`;
 
 
