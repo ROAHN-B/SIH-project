@@ -4,9 +4,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Send, Image as ImageIcon, Mic, X, LoaderCircle, Sparkles, ArrowUp, Languages } from "lucide-react";
 
-// In this environment, the API Key is provided automatically during the fetch call.
-// Leaving this as an empty string is the correct and secure way to configure it here.
-const API_KEY = "AIzaSyA_Mhtt4qLxJNWdil1DUjViVRjo3jWVsUY"; 
+// ✅ FIX 1: Use the environment variable for security
+const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
 type Message = { role: "user" | "bot"; text: string; html?: string; image?: string; suggestions?: string[] };
 
@@ -35,7 +34,6 @@ const DYNAMIC_PROMPT =
   "4.  **Do NOT use a fixed template for every response.** The structure should be dynamic and appropriate to the question.\n" +
   "5.  **Suggest Next Steps:** After your main response, add a section titled '🤔 :' followed by a numbered list of 2-3 relevant follow-up questions the user might ask. This is mandatory.\n" +
   `6.  Reply in the user's language.`;
-
 
 /* ----------  MARKDOWN → HTML ---------- */
 const mdToHtml = (md: string): string =>
@@ -153,26 +151,15 @@ function SuggestionButtons({ suggestions, onSuggestionClick }: { suggestions: st
 
 
 export default function Chatbot() {
-  const initialMessages = () => {
-    try {
-      const saved = localStorage.getItem("krishi-mitra-chat-history");
-      const parsed = saved ? JSON.parse(saved) : [];
-      if (parsed.length === 0) {
-        return [{
-            role: 'bot',
-            text: "Namaste! I am Krishi Mitra, your agricultural assistant. How can I help you today?",
-            html: "<p><strong>नमस्ते!</strong> मैं कृषि मित्र हूँ, आपका कृषि सहायक। आज मैं आपकी कैसे मदद कर सकता हूँ?</p>",
-            suggestions: ["आज का मौसम पूर्वानुमान", "मेरे क्षेत्र में गेहूं की कीमत", "फसल रोग की पहचान करें"]
-        }];
-      }
-      return parsed;
-    } catch (error) {
-        console.error("Failed to parse chat history from localStorage", error);
-        return [];
-    }
-  };
+  // ✅ FIX 2: Set a default initial state to avoid server-side localStorage access
+  const defaultInitialMessage = [{
+      role: 'bot' as const, // Use "as const" for stricter typing
+      text: "Namaste! I am Krishi Mitra, your agricultural assistant. How can I help you today?",
+      html: "<p><strong>नमस्ते!</strong> मैं कृषि मित्र हूँ, आपका कृषि सहायक। आज मैं आपकी कैसे मदद कर सकता हूँ?</p>",
+      suggestions: ["आज का मौसम पूर्वानुमान", "मेरे क्षेत्र में गेहूं की कीमत", "फसल रोग की पहचान करें"]
+  }];
 
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>(defaultInitialMessage);
   const [input, setInput] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [language, setLanguage] = useState<"en-US" | "hi-IN" | "mr-IN" | "pa-IN">("hi-IN");
@@ -186,7 +173,21 @@ export default function Chatbot() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const recognitionRef = useRef<any>(null);
 
+  // ✅ FIX 2: Load from localStorage on the client side using useEffect
   useEffect(() => {
+    try {
+        const saved = localStorage.getItem("krishi-mitra-chat-history");
+        const parsed = saved ? JSON.parse(saved) : [];
+        if (parsed.length > 0) {
+            setMessages(parsed);
+        }
+    } catch (error) {
+        console.error("Failed to parse chat history from localStorage", error);
+    }
+  }, []); // Empty array ensures this runs only once after component mounts
+
+  useEffect(() => {
+    // Save to localStorage whenever messages change
     localStorage.setItem("krishi-mitra-chat-history", JSON.stringify(messages));
   }, [messages]);
 
