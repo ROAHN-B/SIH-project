@@ -1,17 +1,12 @@
 // src/app/api/analyze-soil-card/route.ts
 
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 function fileToGenerativePart(buffer: Buffer, mimeType: string) {
-  return {
-    inlineData: {
-      data: buffer.toString("base64"),
-      mimeType,
-    },
-  };
+  return { inlineData: { data: buffer.toString("base64"), mimeType } };
 }
 
 export async function POST(req: NextRequest) {
@@ -27,52 +22,33 @@ export async function POST(req: NextRequest) {
     
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
+    // The prompt is now updated to extract all primary, secondary, and micronutrients.
     const prompt = `
-        As an expert agricultural analyst, examine this image of a Soil Health Card.
-        Extract the values for Nitrogen (N), Phosphorus (P), Potassium (K), pH, and Organic Carbon (OC).
-        Classify each nutrient's level (e.g., "Low", "Medium", "High").
-        Provide a concise summary and two actionable recommendations.
-        Respond ONLY with a valid JSON object in the specified format. Do not include markdown.
-        {
-          "nitrogen": { "value": <number>, "level": "Low" | "Medium" | "High", "ideal": "280-560 kg/ha" },
-          "phosphorus": { "value": <number>, "level": "Low" | "Medium" | "High", "ideal": "25-50 kg/ha" },
-          "potassium": { "value": <number>, "level": "Low" | "Medium" | "High", "ideal": "150-300 kg/ha" },
-          "ph": { "value": <number>, "level": "Acidic" | "Neutral" | "Alkaline", "ideal": "6.5-7.5" },
-          "organicCarbon": { "value": <number>, "level": "Low" | "Medium" | "High", "ideal": "0.5-0.75 %" },
-          "summary": "<string>",
-          "recommendations": ["<string>", "<string>"]
-        }
+      As an expert agricultural analyst, examine this image of a Soil Health Card.
+      Extract all available values precisely: pH, EC, Organic Carbon (OC), Nitrogen (N), Phosphorus (P), Potassium (K), Sulphur (S), Zinc (Zn), Boron (B), Iron (Fe), Manganese (Mn), and Copper (Cu).
+      If a value is not present, set it to 0.
+      Respond ONLY with a valid JSON object in the following format. Do not include any other text, explanations, or markdown formatting.
+      
+      {
+        "ph": <number>,
+        "ec": <number>,
+        "oc": <number>,
+        "n": <number>,
+        "p": <number>,
+        "k": <number>,
+        "s": <number>,
+        "zn": <number>,
+        "b": <number>,
+        "fe": <number>,
+        "mn": <number>,
+        "cu": <number>
+      }
     `;
 
-    // ✅ ADDED SAFETY SETTINGS
-    const safetySettings = [
-      {
-        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-        threshold: HarmBlockThreshold.BLOCK_NONE,
-      },
-      {
-        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-        threshold: HarmBlockThreshold.BLOCK_NONE,
-      },
-      {
-        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-        threshold: HarmBlockThreshold.BLOCK_NONE,
-      },
-      {
-        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-        threshold: HarmBlockThreshold.BLOCK_NONE,
-      },
-    ];
-
     const imagePart = fileToGenerativePart(buffer, file.type);
-    
-    // ✅ UPDATED API CALL WITH NEW SETTINGS
     const result = await model.generateContent({
         contents: [{ role: "user", parts: [imagePart, {text: prompt}] }],
-        safetySettings,
-        generationConfig: {
-            responseMimeType: "application/json",
-        },
+        generationConfig: { responseMimeType: "application/json" },
     });
     
     return NextResponse.json(JSON.parse(result.response.text()));
